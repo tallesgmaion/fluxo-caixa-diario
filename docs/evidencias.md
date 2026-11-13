@@ -27,7 +27,7 @@ Recuperação de RabbitMQ aprovada. Dez lançamentos projetados uma vez.
 
 ## Integração contínua
 
-O histórico público está no [workflow Validar](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/workflows/validar.yml). A [primeira execução](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43518605458) passou pelos testes unitários e pela compilação do MkDocs e falhou na preparação do Chromium. A [segunda execução](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43519027672) passou também pela integração HTTP e falhou na etapa de navegador. O workflow fixa o runner Ubuntu 24.04 para a versão de Playwright declarada no projeto.
+O [workflow Validar](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/workflows/validar.yml) roda em pushes e pull requests. A [execução de referência](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43519699845) roda no Ubuntu 24.04 e permite consultar o resultado de cada etapa. A [primeira execução](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43518605458) falhou na preparação do Chromium. A [segunda execução](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43519027672) passou pela integração HTTP e falhou na etapa de navegador.
 
 ## Ambiente
 
