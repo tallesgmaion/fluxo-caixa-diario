@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Web' Or '$(MSBuildProjectName)' == 'Lancamentos' Or '$(MSBuildProjectName)' == 'Consolidado'">
+    <Content Include="$(MSBuildThisFileDirectory)docs/assets/carrefour-banco*.png" Link="wwwroot/%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

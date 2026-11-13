@@ -1,0 +1,38 @@
+site_name: Fluxo de Caixa Diário
+site_description: Demonstração técnica de arquitetura e fluxo de caixa
+theme:
+  name: material
+  language: pt-BR
+  features:
+    - navigation.footer
+  logo: assets/carrefour-banco.png
+  favicon: assets/carrefour-banco-icon.png
+  font: false
+  palette:
+    primary: custom
+extra_css: [assets/caixa.css]
+markdown_extensions:
+  - toc:
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+nav:
+  - Índice: index.md
+  - Requisitos: requisitos.md
+  - System Design: system-design.md
+  - Catálogo tecnológico: stack.md
+  - Contratos: contratos.md
+  - Decisões: decisoes.md
+  - Identidade e acesso: identidade-e-acesso.md
+  - Identidade visual: identidade-visual.md
+  - Operação: operacao.md
+  - Critérios de aceite: criterios-de-aceite.md
+  - Testes: testes.md
+  - Evidências locais: evidencias.md
+  - Roadmap: roadmap.md
+  - Custos: custos.md

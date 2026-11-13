@@ -1,0 +1,72 @@
+@page "/consolidado"
+@attribute [Authorize]
+@inject CaixaClient Api
+@inject TimeProvider Clock
+@inject SessaoCaixa Sessao
+<PageTitle>Consolidado</PageTitle>
+<div class="page-heading"><h1>Consolidado diário</h1></div>
+<section class="card" id="resultado">
+    <h2>Período do relatório</h2>
+    <FiltroPeriodo Acao="/consolidado/consultar" Inicio="Inicio" Fim="Fim" MaxDias="31" Limite="LimitePorPagina" />
+    @if (Erro is not null)
+    {
+        <p class="error" role="alert">@Erro</p>
+    }
+    else if (Resultado is not null)
+    {
+        <p class="table-note">Lançamentos recentes podem levar alguns segundos para aparecer.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Resultados do consolidado"><table>
+            <thead><tr><th scope="col">Data</th><th scope="col" class="money">Créditos</th><th scope="col" class="money">Débitos</th><th scope="col" class="money">Saldo do dia (movimento líquido)</th><th scope="col">Última atualização</th></tr></thead>
+            <tbody>@foreach (var dia in Resultado.Dias.Skip((PaginaAtual - 1) * LimitePorPagina).Take(LimitePorPagina))
+            {
+                <tr><td>@CaixaClient.Data(dia.DataCaixa)</td>
+                    <td class="money @(dia.Creditos != "0.00" ? "credit" : null)">@CaixaClient.Real(dia.Creditos)</td>
+                    <td class="money @(dia.Debitos != "0.00" ? "debit" : null)">@CaixaClient.Real(dia.Debitos)</td>
+                    <td class="money"><strong>@CaixaClient.Real(dia.MovimentoLiquido)</strong></td>
+                    <td>@(dia.AtualizadoEmUtc is { } updated ? TimeZoneInfo.ConvertTime(updated, CaixaRules.Fuso).ToString("dd/MM/yyyy HH:mm:ss", CaixaRules.PtBr) : "Sem projeção")</td></tr>
+            }</tbody>
+        </table></div>
+    }
+    <Paginacao Acao="/consolidado/consultar" Inicio="Inicio" Fim="Fim" Limite="LimitePorPagina"
+        Numero="PaginaAtual" TemAnterior="@(PaginaAtual > 1)" TemProxima="@(PaginaAtual < TotalPaginas)"
+        Ocultar="@(Resultado is null)" />
+</section>
+@code {
+    private ConsultaCaixa? Consulta { get; set; }
+    private DateOnly Inicio { get; set; }
+    private DateOnly Fim { get; set; }
+    private int LimitePorPagina => Paginacao.NormalizarLimite(Consulta?.Limite);
+    private int TotalPaginas => Math.Max(1, ((Resultado?.Dias.Count ?? 0) + LimitePorPagina - 1) / LimitePorPagina);
+    private int PaginaAtual => Consulta?.Direcao switch
+    {
+        "anterior" => Math.Max(1, Math.Clamp(Consulta.Pagina, 1, TotalPaginas) - 1),
+        "proxima" => Math.Min(TotalPaginas, Math.Clamp(Consulta.Pagina, 1, TotalPaginas) + 1),
+        _ => 1
+    };
+    private Resumo? Resultado { get; set; }
+    private string? Erro { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        Consulta = (await Sessao.Obter())?.Consolidado;
+        var hoje = CaixaRules.Hoje(Clock);
+        Inicio = Consulta?.Inicio ?? hoje.AddDays(-6);
+        Fim = Consulta?.Fim ?? hoje;
+        if (Consulta is not null && (Consulta.Inicio is null || Consulta.Fim is null))
+        {
+            Erro = "Informe as duas datas do período.";
+            return;
+        }
+        if (Inicio > Fim)
+        {
+            Erro = "A data final deve ser igual ou posterior à inicial.";
+            return;
+        }
+        if (Fim.DayNumber - Inicio.DayNumber >= 31)
+        {
+            Erro = "Selecione um período de até 31 dias.";
+            return;
+        }
+        (Resultado, Erro) = await Api.Send<Resumo>("Consolidado",
+            $"consolidado-diario?inicio={CaixaClient.Iso(Inicio)}&fim={CaixaClient.Iso(Fim)}");
+    }
+}

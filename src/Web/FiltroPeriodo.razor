@@ -1,0 +1,20 @@
+<form method="post" action="@Acao" class="fields period-fields" data-formulario="periodo" data-max-dias="@MaxDias" novalidate>
+    <AntiforgeryToken />
+    <input type="hidden" name="Consulta.Limite" value="@Limite" />
+    <label><span>Início <span class="required" aria-hidden="true">*</span></span>
+        <input type="date" name="Consulta.Inicio" data-inicio value="@CaixaClient.Iso(Inicio)" max="@CaixaClient.Iso(Fim)" required />
+    </label>
+    <label><span>Fim <span class="required" aria-hidden="true">*</span></span>
+        <input type="date" name="Consulta.Fim" data-fim value="@CaixaClient.Iso(Fim)" min="@CaixaClient.Iso(Inicio)" required />
+    </label>
+    <button type="submit" disabled>Consultar</button>
+    <p class="field-error" data-erro-periodo role="status" hidden></p>
+</form>
+
+@code {
+    [Parameter, EditorRequired] public string Acao { get; set; } = "";
+    [Parameter] public DateOnly? Inicio { get; set; }
+    [Parameter] public DateOnly? Fim { get; set; }
+    [Parameter] public int? MaxDias { get; set; }
+    [Parameter] public int Limite { get; set; }
+}

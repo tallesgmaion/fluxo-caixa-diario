@@ -1,0 +1,13 @@
+**
+!Directory.Build.props
+!src/
+!src/**
+!docs/
+!docs/assets/
+!docs/assets/carrefour-banco*.png
+!infra/
+!infra/keycloak/
+!infra/keycloak/themes/
+!infra/keycloak/themes/**
+src/**/bin
+src/**/obj

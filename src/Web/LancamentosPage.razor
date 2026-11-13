@@ -1,0 +1,124 @@
+@page "/lancamentos"
+@attribute [Authorize]
+@inject CaixaClient Api
+@inject TimeProvider Clock
+@inject SessaoCaixa Sessao
+<PageTitle>Lançamentos</PageTitle>
+<div class="page-heading"><h1>Lançamentos</h1></div>
+@if (Criado is not null)
+{
+    <p class="status" role="status">Lançamento registrado. Identificador: @Criado</p>
+}
+@if (Erro is not null)
+{
+    <p class="error" role="alert">@Erro</p>
+}
+<section class="card">
+    <h2>Novo lançamento</h2>
+    <form method="post" action="/lancamentos/registrar" data-formulario="lancamento" novalidate>
+        <AntiforgeryToken />
+        <input type="hidden" name="Formulario.Chave" value="@Formulario.Chave" />
+        <div class="fields entry-fields">
+            <label><span>Data de caixa <span class="required" aria-hidden="true">*</span></span>
+                <input type="date" name="Formulario.Data" value="@CaixaClient.Iso(Formulario.Data)" max="@CaixaClient.Iso(Hoje)" required />
+            </label>
+            <label><span>Tipo <span class="required" aria-hidden="true">*</span></span>
+                <select name="Formulario.Tipo" required>
+                    <option value="credito" selected="@(Formulario.Tipo == "credito")">Crédito</option>
+                    <option value="debito" selected="@(Formulario.Tipo == "debito")">Débito</option>
+                </select>
+            </label>
+            <label><span>Valor (R$) <span class="required" aria-hidden="true">*</span></span>
+                <input name="Formulario.Valor" value="@Formulario.Valor" placeholder="0,00" inputmode="decimal" autocomplete="off" class="money" data-moeda="true" required />
+            </label>
+            <label><span>Descrição <small>(opcional)</small></span>
+                <input name="Formulario.Descricao" value="@Formulario.Descricao" maxlength="200" />
+            </label>
+        </div>
+        <div class="form-actions"><button type="submit" disabled>Registrar</button></div>
+    </form>
+</section>
+<details class="card history" id="historico" open="@HistoricoAberto">
+    <summary>Histórico</summary>
+    <FiltroPeriodo Acao="/lancamentos/consultar" Inicio="InicioEfetivo" Fim="FimEfetivo" Limite="LimitePorPagina" />
+    @if (ErroHistorico is not null) { <p class="error" role="alert">@ErroHistorico</p> }
+    else if (Historico?.Itens.Count == 0) { <p>Nenhum lançamento no período.</p> }
+    else if (Historico is not null)
+    {
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Resultados do histórico"><table><thead><tr><th scope="col">Data</th><th scope="col">Tipo</th><th scope="col" class="money">Valor</th><th scope="col">Descrição</th></tr></thead>
+        <tbody>@foreach (var item in Historico.Itens)
+        {
+            <tr>
+                <td>@CaixaClient.Data(item.DataCaixa)</td>
+                <td>@(item.Tipo == "credito" ? "Crédito" : "Débito")</td>
+                <td class="money @(item.Tipo == "debito" ? "debit" : "credit")">@CaixaClient.Real(item.Valor)</td>
+                <td class="description-cell">@(item.Descricao ?? "-")</td>
+            </tr>
+        }</tbody></table></div>
+    }
+    <Paginacao Acao="/lancamentos/consultar" Inicio="InicioEfetivo" Fim="FimEfetivo" Limite="LimitePorPagina" Numero="PaginaAtual"
+        CursorAnterior="@Historico?.CursorAnterior" ProximoCursor="@Historico?.ProximoCursor"
+        TemAnterior="@(Historico?.CursorAnterior is not null)" TemProxima="@(Historico?.ProximoCursor is not null)"
+        Ocultar="@(Historico is null)" />
+</details>
+@code {
+    private Entrada Formulario { get; set; } = default!;
+    private ConsultaCaixa? Consulta { get; set; }
+    private Guid? Criado { get; set; }
+    private Pagina? Historico { get; set; }
+    private string? Erro { get; set; }
+    private string? ErroHistorico { get; set; }
+    private DateOnly Hoje => CaixaRules.Hoje(Clock);
+    private int PaginaAtual { get; set; } = 1;
+    private int LimitePorPagina => Paginacao.NormalizarLimite(Consulta?.Limite);
+    private bool HistoricoAberto => Consulta is not null;
+    private DateOnly InicioEfetivo => Consulta?.Inicio ?? Hoje.AddDays(-6);
+    private DateOnly FimEfetivo => Consulta?.Fim ?? Hoje;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Formulario = new(Hoje, "credito", null, null, Guid.NewGuid());
+        var estado = await Sessao.Obter();
+        Consulta = estado?.Historico;
+        var retorno = estado?.ConsumirRetorno();
+        Criado = retorno?.Criado;
+        Erro = retorno?.Erro;
+        Formulario = retorno?.Rascunho ?? Formulario;
+        await ConsultarHistorico();
+    }
+
+    private async Task ConsultarHistorico()
+    {
+        if (Consulta is not null && (Consulta.Inicio is null || Consulta.Fim is null))
+        {
+            ErroHistorico = "Informe as duas datas do período.";
+            return;
+        }
+        if (InicioEfetivo > FimEfetivo)
+        {
+            ErroHistorico = "A data final deve ser igual ou posterior à inicial.";
+            return;
+        }
+        var query = $"lancamentos?inicio={CaixaClient.Iso(InicioEfetivo)}&fim={CaixaClient.Iso(FimEfetivo)}&limite={LimitePorPagina}";
+        var cursor = Consulta?.Direcao switch
+        {
+            "anterior" => Consulta.CursorAnterior,
+            "proxima" => Consulta.ProximoCursor,
+            _ => null
+        };
+        if (!string.IsNullOrEmpty(cursor))
+        {
+            if (cursor.Length > 1024)
+            {
+                ErroHistorico = "A paginação é inválida. Consulte o período novamente.";
+                return;
+            }
+            PaginaAtual = Math.Clamp(Consulta!.Pagina, 1, int.MaxValue - 1) +
+                (Consulta.Direcao == "anterior" ? -1 : 1);
+            PaginaAtual = Math.Max(1, PaginaAtual);
+            query += "&cursor=" + Uri.EscapeDataString(cursor);
+        }
+        (Historico, ErroHistorico) = await Api.Send<Pagina>("Lancamentos", query);
+    }
+
+}

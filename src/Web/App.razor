@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <base href="/" />
+    <link rel="stylesheet" href="caixa.css?v=6" />
+    <script src="formularios.js?v=4" defer></script>
+    <link rel="icon" href="carrefour-banco-icon.png" type="image/png" />
+    <HeadOutlet />
+</head>
+<body>
+    <header><div class="frame bar">
+        <a class="brand" href="/">
+            <img class="brand-logo" src="carrefour-banco.png" alt="Carrefour Banco" width="180" height="41" />
+            <span>Fluxo de Caixa Diário</span>
+        </a>
+        <nav aria-label="Menu principal">
+            <NavLink href="/lancamentos">Lançamentos</NavLink>
+            <NavLink href="/consolidado">Consolidado</NavLink>
+            <AuthorizeView>
+                <Authorized>
+                    <form method="post" action="/sair">
+                        <AntiforgeryToken />
+                        <button type="submit" class="sign-out">Sair</button>
+                    </form>
+                </Authorized>
+            </AuthorizeView>
+        </nav>
+    </div></header>
+    <main class="frame">
+        @if (PaginaInexistente)
+        {
+            <PageTitle>Página não encontrada</PageTitle>
+            <section class="card hero">
+                <h1>Página não encontrada</h1>
+                <p>Verifique o endereço ou volte para a página inicial.</p>
+                <a class="button" href="/">Voltar ao início</a>
+            </section>
+        }
+        else
+        {
+            <Router AppAssembly="@typeof(App).Assembly">
+                <Found Context="route"><AuthorizeRouteView RouteData="@route" /></Found>
+            </Router>
+        }
+    </main>
+    <footer class="frame">Ambiente de demonstração</footer>
+    <dialog id="processamento" aria-labelledby="mensagem-processamento">
+        <div class="loading-content" role="status">
+            <span class="spinner" aria-hidden="true"></span>
+            <p id="mensagem-processamento">Processando…</p>
+        </div>
+    </dialog>
+</body>
+</html>
+
+@code {
+    [Parameter] public bool PaginaInexistente { get; set; }
+}

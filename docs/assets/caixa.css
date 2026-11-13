@@ -1,0 +1,11 @@
+.md-header, .md-tabs { background-color: #00529c; }
+.md-header { border-bottom: 3px solid #61b2e5; }
+:root { --md-primary-fg-color: #00529c; --md-accent-fg-color: #075489; }
+.md-header__button.md-logo { background: #fff; border-radius: .25rem; padding: .30rem .42rem; }
+.md-header__button.md-logo img { width: 5rem; height: auto; }
+.md-nav__title .md-nav__button.md-logo img { width: 5rem; height: auto; }
+@media screen and (max-width: 76.2344em) {
+    .md-header__button.md-logo { display: block; margin-inline: .1rem; }
+    .md-header__button.md-logo img { width: 3.7rem; }
+    .md-header__title { margin-inline-start: .45rem; }
+}

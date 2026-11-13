@@ -1,0 +1,41 @@
+<nav class="pagination" aria-label="Paginação" hidden="@Ocultar">
+    <form method="post" action="@Acao" class="pagination-form" data-formulario="paginacao">
+        <AntiforgeryToken />
+        <input type="hidden" name="Consulta.Inicio" value="@CaixaClient.Iso(Inicio)" />
+        <input type="hidden" name="Consulta.Fim" value="@CaixaClient.Iso(Fim)" />
+        <input type="hidden" name="Consulta.Pagina" value="@Numero" />
+        <input type="hidden" name="Consulta.CursorAnterior" value="@CursorAnterior" />
+        <input type="hidden" name="Consulta.ProximoCursor" value="@ProximoCursor" />
+        <label class="page-size">Linhas por página
+            <select name="Consulta.Limite" data-limite>
+                @foreach (var tamanho in Tamanhos)
+                {
+                    <option value="@tamanho" selected="@(tamanho == Limite)">@tamanho</option>
+                }
+            </select>
+        </label>
+        <noscript><button type="submit" name="Consulta.Direcao" value="tamanho">Aplicar</button></noscript>
+        <div class="page-controls">
+            <button class="page-link" type="submit" name="Consulta.Direcao" value="anterior" disabled="@(!TemAnterior)">Anterior</button>
+            <span aria-current="page">Página @Numero</span>
+            <button class="page-link" type="submit" name="Consulta.Direcao" value="proxima" disabled="@(!TemProxima)">Próxima</button>
+        </div>
+    </form>
+</nav>
+
+@code {
+    [Parameter] public int Numero { get; set; }
+    [Parameter] public bool TemAnterior { get; set; }
+    [Parameter] public bool TemProxima { get; set; }
+    [Parameter] public string? CursorAnterior { get; set; }
+    [Parameter] public string? ProximoCursor { get; set; }
+    [Parameter] public bool Ocultar { get; set; }
+    [Parameter, EditorRequired] public string Acao { get; set; } = "";
+    [Parameter] public DateOnly? Inicio { get; set; }
+    [Parameter] public DateOnly? Fim { get; set; }
+    [Parameter] public int Limite { get; set; }
+
+    private static readonly int[] Tamanhos = [10, 20, 30, 40, 50];
+    public static int NormalizarLimite(int? limite) =>
+        limite is int valor && Tamanhos.Contains(valor) ? valor : Tamanhos[0];
+}

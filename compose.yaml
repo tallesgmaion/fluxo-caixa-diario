@@ -1,0 +1,138 @@
+name: fluxo-caixa
+
+x-app: &app
+  restart: unless-stopped
+  environment: &app-env
+    ASPNETCORE_ENVIRONMENT: Development
+    ASPNETCORE_HTTP_PORTS: 8080
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_ENDPOINT:-}
+    Identity__Authority: http://localhost:18080/realms/fluxo-caixa
+    Identity__Metadata: http://keycloak:18080/realms/fluxo-caixa/.well-known/openid-configuration
+
+services:
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?Execute scripts/setup.ps1 ou bash scripts/setup.sh}
+      MSSQL_MEMORY_LIMIT_MB: 2048
+    volumes:
+      - sql-data:/var/opt/mssql
+
+  sql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    entrypoint: ["/bin/bash", "/infra/init.sh"]
+    depends_on: [sql]
+    environment:
+      SA_PASSWORD: ${SA_PASSWORD}
+      WRITE_PASSWORD: ${WRITE_PASSWORD}
+      PUBLISH_PASSWORD: ${PUBLISH_PASSWORD}
+      READ_PASSWORD: ${READ_PASSWORD}
+      PROJECT_PASSWORD: ${PROJECT_PASSWORD}
+      IDENTITY_PASSWORD: ${IDENTITY_PASSWORD}
+    volumes:
+      - ./infra/sql:/infra:ro
+
+  rabbitmq:
+    image: rabbitmq:4.4-management
+    hostname: rabbitmq
+    ports: ["127.0.0.1:15672:15672"]
+    volumes:
+      - rabbit-data:/var/lib/rabbitmq
+      - ./infra/rabbit/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./infra/rabbit/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
+      - ./.local/rabbit/definitions.json:/etc/rabbitmq/definitions.json:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    build: {context: ., dockerfile: infra/keycloak/Dockerfile}
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_HTTP_PORT: 18080
+      KC_HOSTNAME: http://localhost:18080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_DB: mssql
+      KC_DB_URL: "jdbc:sqlserver://sql:1433;databaseName=CaixaIdentidade;encrypt=true;trustServerCertificate=true"
+      KC_DB_USERNAME: caixa_identity
+      KC_DB_PASSWORD: ${IDENTITY_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: operador-identidade
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      sql-init: {condition: service_completed_successfully}
+    ports: ["127.0.0.1:18080:18080"]
+    volumes:
+      - ./.local/keycloak:/opt/keycloak/data/import:ro
+
+  lancamentos:
+    <<: *app
+    build: {context: ., dockerfile: infra/Dockerfile, args: {SERVICE: Lancamentos}}
+    depends_on:
+      sql-init: {condition: service_completed_successfully}
+    environment:
+      <<: *app-env
+      ConnectionStrings__Caixa: "Server=sql;Database=CaixaEscrita;User ID=caixa_write;Password=${WRITE_PASSWORD};TrustServerCertificate=true;Connect Timeout=3"
+    ports: ["127.0.0.1:18081:8080"]
+
+  consolidado:
+    <<: *app
+    build: {context: ., dockerfile: infra/Dockerfile, args: {SERVICE: Consolidado}}
+    depends_on:
+      sql-init: {condition: service_completed_successfully}
+    environment:
+      <<: *app-env
+      ConnectionStrings__Caixa: "Server=sql;Database=CaixaLeitura;User ID=caixa_read;Password=${READ_PASSWORD};TrustServerCertificate=true;Connect Timeout=3"
+    ports: ["127.0.0.1:18082:8080"]
+
+  publicador:
+    <<: *app
+    build: {context: ., dockerfile: infra/Dockerfile, args: {SERVICE: Publicador}}
+    depends_on:
+      sql-init: {condition: service_completed_successfully}
+    environment:
+      <<: *app-env
+      ConnectionStrings__Caixa: "Server=sql;Database=CaixaEscrita;User ID=caixa_publish;Password=${PUBLISH_PASSWORD};TrustServerCertificate=true;Connect Timeout=3"
+      Rabbit__User: publicador
+      Rabbit__Password: ${RABBIT_PUBLISH_PASSWORD}
+    ports: ["127.0.0.1:18084:8080"]
+
+  projetor:
+    <<: *app
+    build: {context: ., dockerfile: infra/Dockerfile, args: {SERVICE: Projetor}}
+    depends_on:
+      sql-init: {condition: service_completed_successfully}
+    environment:
+      <<: *app-env
+      ConnectionStrings__Caixa: "Server=sql;Database=CaixaLeitura;User ID=caixa_project;Password=${PROJECT_PASSWORD};TrustServerCertificate=true;Connect Timeout=3"
+      Rabbit__User: projetor
+      Rabbit__Password: ${RABBIT_PROJECT_PASSWORD}
+    ports: ["127.0.0.1:18085:8080"]
+
+  web:
+    <<: *app
+    build: {context: ., dockerfile: infra/Dockerfile, args: {SERVICE: Web}}
+    environment:
+      <<: *app-env
+      Identity__ClientSecret: ${WEB_CLIENT_SECRET}
+      Api__Lancamentos: http://lancamentos:8080
+      Api__Consolidado: http://consolidado:8080
+    ports: ["127.0.0.1:18083:8080"]
+
+  mkdocs:
+    image: python:3.12-slim
+    profiles: [docs]
+    working_dir: /projeto
+    volumes:
+      - ./docs:/projeto/docs:ro
+      - ./mkdocs.yml:/projeto/mkdocs.yml:ro
+      - ./requirements-docs.txt:/projeto/requirements-docs.txt:ro
+    command: ["sh", "-ec", "pip install --disable-pip-version-check -r requirements-docs.txt && mkdocs serve -a 0.0.0.0:8000"]
+    ports: ["127.0.0.1:8000:8000"]
+
+volumes:
+  sql-data:
+  rabbit-data:

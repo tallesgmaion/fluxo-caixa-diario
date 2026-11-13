@@ -1,0 +1,28 @@
+.login-pf body, body { background: #f3f6fa; color: #0b2440; }
+#kc-header-wrapper { color: #00529c; text-shadow: none; font-weight: 700; }
+#kc-header-wrapper::before {
+    content: "";
+    display: block;
+    width: min(11rem, 80vw);
+    height: 3.5rem;
+    margin: 0 auto .75rem;
+    background: #fff url("../img/carrefour-banco.png") center / 88% auto no-repeat;
+    border-radius: .375rem;
+    border-bottom: 3px solid #61b2e5;
+}
+#kc-login { background-color: #00529c; }
+#kc-form-wrapper::before { display: block; content: "Demonstração técnica independente · Use os dados fictícios do exercício."; margin-bottom: 1rem; }
+#keycloak-bg .pf-v5-c-login { display: block; min-height: 100vh; padding: clamp(1.5rem, 7vh, 4rem) 1rem; }
+#keycloak-bg .pf-v5-c-login__container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "header" "main" "footer";
+    grid-template-rows: auto;
+    gap: 1rem;
+    width: min(100%, 30rem);
+    margin: 0 auto;
+    padding: 0;
+}
+#kc-header { grid-area: header; justify-self: stretch; margin: 0; padding: 0; text-align: center; }
+#kc-header-wrapper { text-align: center; }
+#keycloak-bg .pf-v5-c-login__main { grid-area: main; justify-self: stretch; width: 100%; max-width: none; min-width: 0; border-radius: .85rem; overflow: hidden; }

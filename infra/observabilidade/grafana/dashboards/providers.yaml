@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: Fluxo de Caixa Diário
+    folder: Fluxo de Caixa
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards/json

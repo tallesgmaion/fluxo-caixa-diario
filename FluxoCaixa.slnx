@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Core/Core.csproj" />
+    <Project Path="src/Lancamentos/Lancamentos.csproj" />
+    <Project Path="src/Consolidado/Consolidado.csproj" />
+    <Project Path="src/Publicador/Publicador.csproj" />
+    <Project Path="src/Projetor/Projetor.csproj" />
+    <Project Path="src/Web/Web.csproj" />
+  </Folder>
+  <Folder Name="/testes/">
+    <Project Path="testes/Caixa.Tests/Caixa.Tests.csproj" />
+  </Folder>
+</Solution>
