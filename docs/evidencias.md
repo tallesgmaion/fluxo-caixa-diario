@@ -1,6 +1,33 @@
-# Evidências de execução local
+# Evidências de testes e entrega
 
 [Voltar ao índice](index.md)
+
+## Repositório público e clone limpo
+
+Em 13/11/2026, o [repositório público](https://github.com/tallesgmaion/fluxo-caixa-diario) foi clonado por HTTPS com o gerenciador de credenciais do Git desabilitado. O teste partiu do [commit `564d5e4`](https://github.com/tallesgmaion/fluxo-caixa-diario/commit/564d5e4303ae58e3c1e7cd3b4e370049cbafea97), com árvore limpa, credenciais novas geradas em `.env` e volumes Docker novos.
+
+```powershell
+git clone https://github.com/tallesgmaion/fluxo-caixa-diario.git
+cd fluxo-caixa-diario
+powershell.exe -NoProfile -File scripts/subir.ps1
+pwsh -NoProfile -File scripts/caixa-testes.ps1 -Modo Integracao
+```
+
+- `sql-init` terminou com código 0. O teste HTTP passou para autenticação, isolamento por conta, escrita idempotente e projeção.
+- O teste de navegador do README passou com login usando as credenciais geradas, registro, histórico, paginação, consolidação, logout e retorno ao login ao usar **Voltar**.
+- MkDocs compilou em modo estrito. MkDocs, as duas referências Scalar, RabbitMQ Management, Grafana, Jaeger e Seq responderam HTTP 200.
+- O Git continuou sem alterações rastreadas após subir o ambiente e executar os testes.
+
+No mesmo clone, `pwsh -NoProfile -File scripts/caixa-testes.ps1 -Modo Resiliencia` passou pelos dois cenários de interrupção. Dez lançamentos foram aceitos durante cada queda de 60 segundos e apareceram no saldo uma única vez após a retomada.
+
+```text
+Recuperação de Consolidado aprovada. Dez lançamentos projetados uma vez.
+Recuperação de RabbitMQ aprovada. Dez lançamentos projetados uma vez.
+```
+
+## Integração contínua
+
+O histórico público está no [workflow Validar](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/workflows/validar.yml). A [primeira execução](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43518605458) passou pelos testes unitários e pela compilação do MkDocs e falhou na preparação do Chromium. A [segunda execução](https://github.com/tallesgmaion/fluxo-caixa-diario/actions/runs/43519027672) passou também pela integração HTTP e falhou na etapa de navegador. O workflow fixa o runner Ubuntu 24.04 para a versão de Playwright declarada no projeto.
 
 ## Ambiente
 
@@ -27,6 +54,8 @@ Execução local em Docker Desktop com contêineres Linux x86-64. O Docker dispo
 
 Em 13/11/2026, com k6 1.5.0, 100 contas e 90 dias de dados sintéticos por conta, o cenário de 5 minutos atingiu **50 consultas/s, 0% de perda observada e p95 de 2,46 ms** nas consultas válidas. O gerador registrou 15.001 consultas válidas e 1.501 lançamentos confirmados em paralelo, sem falhas HTTP, descartes ou interrupções. A diferença de uma iteração em cada cenário decorre da contagem do gerador na fronteira da janela. O teste rápido anterior validou 20 de 20 consultas.
 
+Os [resumos do terminal do k6](resultados-k6.md) registram os resultados de carga e estresse.
+
 ```powershell
 pwsh -NoProfile -File scripts/caixa-testes.ps1 -Modo Carga
 docker compose -f compose.yaml -f compose.testes.yaml run --rm -e MODO=aceite k6
@@ -38,4 +67,4 @@ O k6 alternou patamares de 50, 75, 100 e 150 consultas/s e voltou a 50 consultas
 
 ## Verificações adicionais
 
-A verificação de acesso anônimo ao repositório e de execução a partir da URL pública fica para a publicação. Os ensaios locais cobrem reentrega após interrupção e republicação. A variante com dois consumidores simultâneos, o timeout HTTP deliberado após commit e a verificação completa da telemetria durante uma queda permanecem como cobertura adicional. A [estratégia de testes](testes.md) reúne os cenários reproduzíveis.
+Os ensaios locais cobrem reentrega após interrupção e republicação. A variante com dois consumidores simultâneos, o timeout HTTP deliberado após commit e a verificação completa da telemetria durante uma queda permanecem como cobertura adicional. A [estratégia de testes](testes.md) reúne os cenários reproduzíveis.

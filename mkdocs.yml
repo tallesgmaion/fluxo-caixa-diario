@@ -33,6 +33,7 @@ nav:
   - Operação: operacao.md
   - Critérios de aceite: criterios-de-aceite.md
   - Testes: testes.md
-  - Evidências locais: evidencias.md
+  - Evidências de testes e entrega: evidencias.md
+  - Saídas do k6: resultados-k6.md
   - Roadmap: roadmap.md
   - Custos: custos.md

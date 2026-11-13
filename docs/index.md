@@ -29,5 +29,6 @@ Na raiz do projeto, execute `powershell.exe -NoProfile -File scripts/subir.ps1` 
 
 - [Operação](operacao.md) - verificações de saúde, monitoramento e recuperação.
 - [Estratégia de testes](testes.md) - suítes e cenários de verificação.
-- [Evidências locais](evidencias.md) - execuções registradas e cobertura pendente.
+- [Evidências de testes e entrega](evidencias.md) — clone público, CI, recuperação e resultados de carga.
+- [Saídas do k6](resultados-k6.md) — resumos do terminal para carga e estresse.
 - [Custos](custos.md) - premissas e estimativas de infraestrutura.

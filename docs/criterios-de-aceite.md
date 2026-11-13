@@ -57,8 +57,8 @@ A [estratégia de testes](testes.md) detalha as suítes .NET, os testes de naveg
 | Lançamentos disponíveis na queda do consolidado | [Falhas no desenho](system-design.md#consulta-diária-e-degradação) | CA-08 verificado em Compose |
 | 50 req/s e até 5% de perda | [Cenário de carga](#cenário-de-carga) | CA-12 verificado com [k6 no Compose](evidencias.md#aceite-de-carga) |
 | Testes | Critérios nesta página e [estratégia de testes](testes.md) | Suítes executáveis e [evidências locais](evidencias.md). Cobertura ampliada pendente |
-| README com funcionamento e execução local | [Execução local](index.md#execução-local) | Comandos executados no workspace. Clone público pendente |
-| Repositório público GitHub e toda a documentação no repositório | [Índice de documentação](index.md#índice-da-documentação) | Git local inicializado. Publicação pendente |
+| README com funcionamento e execução local | [Execução local](index.md#execução-local) | Comando do README e fluxo principal validados a partir do [clone público](evidencias.md#repositório-público-e-clone-limpo) |
+| Repositório público GitHub e toda a documentação no repositório | [Índice de documentação](index.md#índice-da-documentação) | Clone HTTPS e documentação pública verificados sem autenticação |
 | Arquitetura de transição, quando necessária | [Implantação e transição](system-design.md#implantação-local-e-arquitetura-alvo) | Greenfield. Plano de entrada em operação documentado |
 | Estimativa de infraestrutura e licenças | [Custos](custos.md) | Cenários e faixas ilustrativas documentados |
 | Monitoramento e observabilidade | [Operação](operacao.md#observabilidade) | Perfil Compose disponível, com coleta verificada no Prometheus e no Jaeger. Evidência completa de CA-13 pendente |

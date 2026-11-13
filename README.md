@@ -113,6 +113,8 @@ Para testar o fluxo pelo navegador no mesmo ambiente virtual do MkDocs:
 
 A [estratégia de testes](docs/testes.md) detalha os parâmetros e a [matriz de aceite](docs/criterios-de-aceite.md) descreve a cobertura.
 
+Consulte as [evidências de testes e entrega](docs/evidencias.md) para ver os resultados do clone público, os ensaios de recuperação, as saídas do k6 e as execuções do CI.
+
 Para parar preservando dados, use `docker compose -f compose.yaml -f compose.observabilidade.yaml --profile docs down`. Para recriar um ambiente descartável, use o mesmo comando com `--volumes`, que exclui os bancos e filas locais. Para gerar novas credenciais após a limpeza, remova o `.env` e repita o setup.
 
 ## Integração contínua
@@ -132,7 +134,7 @@ O [workflow do GitHub Actions](.github/workflows/validar.yml) roda em pushes e p
 | [Decisões](docs/decisoes.md) | Alternativas, justificativas e consequências |
 | [Critérios de aceite](docs/criterios-de-aceite.md) | Evidências e matriz do enunciado |
 | [Estratégia de testes](docs/testes.md) | Suítes e cenários |
-| [Evidências locais](docs/evidencias.md) | Verificações executadas e cobertura pendente |
+| [Evidências de testes e entrega](docs/evidencias.md) | Clone público, CI, recuperação, carga e estresse |
 | [Identidade e acesso](docs/identidade-e-acesso.md) | Keycloak, papéis e isolamento |
 | [Identidade visual](docs/identidade-visual.md) | Aplicação por interface |
 | [Operação](docs/operacao.md) | Probes, segurança, diagnóstico e recuperação |
