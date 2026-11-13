@@ -2,6 +2,18 @@
 
 [Voltar ao índice](index.md)
 
+## Reproduzir a deduplicação com dois consumidores
+
+Na raiz do projeto, gere as credenciais com `powershell.exe -NoProfile -File scripts/setup.ps1` no Windows ou `bash scripts/setup.sh` no macOS ou Linux. O ensaio usa um projeto Compose separado, RabbitMQ Management na porta local 25672 e Python 3 com a biblioteca padrão.
+
+```bash
+docker compose -p caixa-concorrencia -f compose.yaml -f testes/compose.concorrencia.yaml up -d --build --scale projetor=2 sql sql-init rabbitmq projetor
+python testes/concorrencia.py
+docker compose -p caixa-concorrencia -f compose.yaml -f testes/compose.concorrencia.yaml down
+```
+
+O script confirma dois consumidores no broker, observa duas requisições de aplicação simultaneamente bloqueadas no SQL e exige um ACK em cada réplica. O teste termina com sucesso quando o evento aparece uma única vez na inbox e o resumo contém exatamente um movimento de R$ 42,50. [Evidência do CA-07](evidencias.md#dois-consumidores-concorrentes-ca-07)
+
 O plano cobre os [critérios de aceite](criterios-de-aceite.md). A implementação inclui xUnit, verificações HTTP contra SQL Server e RabbitMQ no Compose, Playwright e k6. A tabela registra também a cobertura planejada. Os limites exigidos pelo enunciado estão identificados em [requisitos](requisitos.md#requisitos-não-funcionais).
 
 ## Suítes .NET

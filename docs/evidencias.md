@@ -65,6 +65,21 @@ docker compose -f compose.yaml -f compose.testes.yaml run --rm -e MODO=aceite k6
 
 O k6 alternou patamares de 50, 75, 100 e 150 consultas/s e voltou a 50 consultas/s. No total de 10 min 50 s, houve 55.249 consultas válidas, 0 falhas HTTP, 0 descartes observados e p95 agregado de 3,25 ms. O limite de capacidade ficou acima do maior patamar deste ensaio. O cenário de estresse usou somente leituras.
 
+## Dois consumidores concorrentes (CA-07)
+
+Em 13/11/2026, duas réplicas do projetor consumiram duas cópias do mesmo evento sintético de crédito de R$ 42,50. O ensaio usou um projeto Compose isolado, com RabbitMQ e SQL Server próprios. Um bloqueio temporário na inbox permitiu observar as duas requisições de aplicação aguardando simultaneamente no SQL Server. Após a liberação, cada réplica confirmou sua entrega. A consulta final verificou a quantidade, os créditos, os débitos, o saldo e a contagem na inbox.
+
+```text
+Antes: saldo R$ 0,00, zero movimentos e zero registros na inbox.
+Evento: 0a7c17e6-5c47-4300-951d-f0464ce81d90
+RabbitMQ: duas publicações roteadas e dois consumidores registrados.
+SQL Server: duas transações Apply aguardando bloqueio ao mesmo tempo.
+ACK confirmado na réplica 36c462b81ad3.
+ACK confirmado na réplica 1478c71fe79f.
+Depois: saldo R$ 42,50, um movimento e um registro na inbox.
+Aprovado: duas entregas confirmadas, um único efeito no saldo.
+```
+
 ## Verificações adicionais
 
-Os ensaios locais cobrem reentrega após interrupção e republicação. A variante com dois consumidores simultâneos, o timeout HTTP deliberado após commit e a verificação completa da telemetria durante uma queda permanecem como cobertura adicional. A [estratégia de testes](testes.md) reúne os cenários reproduzíveis.
+O timeout HTTP deliberado após commit e a verificação completa da telemetria durante uma queda permanecem como cobertura adicional. A [estratégia de testes](testes.md) reúne os cenários reproduzíveis.
